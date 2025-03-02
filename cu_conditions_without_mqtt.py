@@ -1,6 +1,6 @@
 import time
 
-connection_status = False
+connection_status = True
 new_data = False
 user_input = False
 IAQ_PM2 = 0
