@@ -43,7 +43,7 @@ client.loop_start()
 
 # If connected, go through the following conditions:
 while True:
-    time.sleep(0.1)
+    time.sleep(0.5)
     prompt1 = input("Enter a data value? [y/n]: ").lower()
     # If yes, prompt user for input
     if prompt1 == "y":
