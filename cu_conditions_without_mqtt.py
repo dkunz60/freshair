@@ -35,21 +35,33 @@ while connection_status == True:
         if len(parse_2) > 1:
             PM2_str = parse_2[1].split(end_2)[0]
             print(PM2_str)
-            IAQ_PM2 = int(PM2_str)
+            try:
+                IAQ_PM2 = int(PM2_str)
+            except ValueError:
+                print("Invalid data entry")
+                pass          
 
         # Parse PM10 data
         parse_10 = data.split(start_10)
         if len(parse_10) > 1:
             PM10_str = parse_10[1].split(end_10)[0]
             print(PM10_str)
-            IAQ_PM10 = int(PM10_str)
+            try:
+                IAQ_PM10 = int(PM10_str)
+            except ValueError:
+                print("Invalid data entry")
+                pass
             
         # Parse Overall PM data
         parse_ovr = data.split(start_ovr)
         if len(parse_ovr) > 1:
             ovr_str = parse_ovr[1].split(end_ovr)[0]
             print(ovr_str)
-            IAQ_ovr = int(ovr_str)
+            try:
+                IAQ_ovr = int(ovr_str)
+            except ValueError:
+                print("Invalid data entry")
+                pass
         
         # If all data is still zero, something is wrong, ask for data again
         if IAQ_ovr == 0 and IAQ_PM2 == 0 and IAQ_PM10 == 0:
@@ -65,9 +77,15 @@ while connection_status == True:
         # If over/equal to conditions below, "Dangerous" PM condition met (via OSHA 1910.1000)
         if IAQ_PM2 >= 55 or IAQ_PM10 >= 255 or IAQ_ovr >=255:
             print("Dangerous")
+            new_data = False
+            user_input = False
         # If under "Dangerous" threshold and over/equal to conditions below, "Unhealthy" PM condition met (via OSHA 1910.1000)
         elif IAQ_PM2 >= 35 or IAQ_PM10 >= 155 or IAQ_ovr >=155:
             print("Unhealthy")
+            new_data = False
+            user_input = False
         # If below both conditions, "Healthy" PM condition met (via OSHA 1910.1000)
         else:
             print("Healthy")
+            new_data = False
+            user_input = False
