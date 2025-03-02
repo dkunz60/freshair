@@ -33,7 +33,25 @@ def on_subscribe(client, userdata, mid, granted_qos, properties=None):
 # Upon message, print confirmation
 def on_message(client, userdata, msg):
     print(msg.topic + " " + str(msg.qos) + " " + str(msg.payload))
-
+    Sensor_ID = msg.topic
+    print("ID" %s)
+    if Sensor_ID = 1:
+        client.publish("cu/id", payload="Sensor 1", qos=1)
+        GPIO.output(5, True)
+        GPIO.output(6, False)
+        GPIO.output(6, False)
+    elif Sensor_ID = 2:
+        client.publish("cu/id", payload="Sensor 2", qos=1)
+        GPIO.output(5, False)
+        GPIO.output(6, True)
+        GPIO.output(6, False)
+    else:
+        client.publish("cu/id", payload="Sensor 3", qos=1)
+        GPIO.output(5, False)
+        GPIO.output(6, False)
+        GPIO.output(6, True)
+        
+    
 # using MQTT version 5 here, for 3.1.1: MQTTv311, 3.1: MQTTv31
 # userdata is user defined data of any type, updated by user_data_set()
 # client_id is the given name of the client
