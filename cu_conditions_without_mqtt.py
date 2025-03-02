@@ -35,8 +35,10 @@ while connection_status == True:
         if len(parse_2) > 1:
             PM2_str = parse_2[1].split(end_2)[0]
             print(PM2_str)
+            # Try to convert string to int type
             try:
                 IAQ_PM2 = int(PM2_str)
+            # If error, something is wrong with entry
             except ValueError:
                 print("Invalid data entry")
                 pass          
@@ -46,8 +48,10 @@ while connection_status == True:
         if len(parse_10) > 1:
             PM10_str = parse_10[1].split(end_10)[0]
             print(PM10_str)
+            # Try to convert string to int type
             try:
                 IAQ_PM10 = int(PM10_str)
+            # If error, something is wrong with entry
             except ValueError:
                 print("Invalid data entry")
                 pass
@@ -57,8 +61,10 @@ while connection_status == True:
         if len(parse_ovr) > 1:
             ovr_str = parse_ovr[1].split(end_ovr)[0]
             print(ovr_str)
+            # Try to convert string to int type
             try:
                 IAQ_ovr = int(ovr_str)
+            # If error, something is wrong with entry
             except ValueError:
                 print("Invalid data entry")
                 pass
