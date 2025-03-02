@@ -1,6 +1,7 @@
 import time
 
 connection_status = False
+new_data = False
 user_input = False
 IAQ_PM2 = 0
 IAQ_PM10 = 0
@@ -23,45 +24,50 @@ PM2_str = ""
 PM10_str = ""
 ovr_str = ""
 
-# Wait for data input
-while user_input == False:
-    data = input("Enter data string: ")
-        
-    # Parse PM2.5 data
-    parse_2 = data.split(start_2)
-    if len(parse_2) > 1:
-        PM2_str = parse_2[1].split(end_2)[0]
-        print(PM2_str)
-        IAQ_PM2 = int(PM2_str)
-
-    # Parse PM10 data
-    parse_10 = data.split(start_10)
-    if len(parse_10) > 1:
-        PM10_str = parse_10[1].split(end_10)[0]
-        print(PM10_str)
-        IAQ_PM10 = int(PM10_str)
-        
-    # Parse Overall PM data
-    parse_ovr = data.split(start_ovr)
-    if len(parse_ovr) > 1:
-        ovr_str = parse_ovr[1].split(end_ovr)[0]
-        print(ovr_str)
-        IAQ_ovr = int(ovr_str)
-        
-    if IAQ_ovr == 0 and IAQ_PM2 == 0 and IAQ_PM10 == 0:
-        print("Invalid data entry")
-    else:
-        user_input = True
-        
-    
 while connection_status == True:
-    time.sleep(0.5)
-    # If over/equal to 200 IAQ, "Dangerous" PM condition met
-    if IAQ_PM2 >= 200 or IAQ_PM10 >= 200 or IAQ_ovr >=200:
-        print("Dangerous")
-    # If under 200 and over/equal to 100, "Unhealthy" PM condition met
-    elif IAQ_PM2 >= 100 or IAQ_PM10 >= 100 or IAQ_ovr >=100:
-        print("Unhealthy")
-    # If below both conditions, "Healthy" PM condition met
-    else:
-        print("Healthy")
+    
+    # Wait for data input
+    while user_input == False:
+        data = input("Enter data string: ")
+            
+        # Parse PM2.5 data
+        parse_2 = data.split(start_2)
+        if len(parse_2) > 1:
+            PM2_str = parse_2[1].split(end_2)[0]
+            print(PM2_str)
+            IAQ_PM2 = int(PM2_str)
+
+        # Parse PM10 data
+        parse_10 = data.split(start_10)
+        if len(parse_10) > 1:
+            PM10_str = parse_10[1].split(end_10)[0]
+            print(PM10_str)
+            IAQ_PM10 = int(PM10_str)
+            
+        # Parse Overall PM data
+        parse_ovr = data.split(start_ovr)
+        if len(parse_ovr) > 1:
+            ovr_str = parse_ovr[1].split(end_ovr)[0]
+            print(ovr_str)
+            IAQ_ovr = int(ovr_str)
+        
+        # If all data is still zero, something is wrong, ask for data again
+        if IAQ_ovr == 0 and IAQ_PM2 == 0 and IAQ_PM10 == 0:
+            print("Invalid data entry")
+        # Else, data is good, strings were parsed, continue
+        else:
+            new_data = True
+            user_input = True
+                   
+        
+    while new_data == True:
+        time.sleep(0.5)
+        # If over/equal to conditions below, "Dangerous" PM condition met (via OSHA 1910.1000)
+        if IAQ_PM2 >= 55 or IAQ_PM10 >= 255 or IAQ_ovr >=255:
+            print("Dangerous")
+        # If under "Dangerous" threshold and over/equal to conditions below, "Unhealthy" PM condition met (via OSHA 1910.1000)
+        elif IAQ_PM2 >= 35 or IAQ_PM10 >= 155 or IAQ_ovr >=155:
+            print("Unhealthy")
+        # If below both conditions, "Healthy" PM condition met (via OSHA 1910.1000)
+        else:
+            print("Healthy")
