@@ -21,8 +21,8 @@ IAQ_PM2 = 0
 IAQ_PM10 = 0
 IAQ_ovr = 0
 GPIO.setmode(GPIO.BCM)
-GPIO.setup(5, GPIO.OUT)
-GPIO.setup(6, GPIO.OUT)
+GPIO.setup(35, GPIO.OUT)
+GPIO.setup(37, GPIO.OUT)
 
 # Raw data from sensors comes in the following format:
 # {"iaqi_pm2.5":200,"iaqi_pm10":2,"overall_iaqi":12}
@@ -115,16 +115,12 @@ while connection_status == False:
 # Broker successfully connected
 while connection_status == True:
     time.sleep(0.5)
-    GPIO.output(5, GPIO.LOW)
-    time.sleep(0.5)
-    GPIO.output(6, GPIO.LOW)
-    time.sleep(0.5)
     
     # If acknowledged, turn off sirens
     while toggle == True:
-        GPIO.output(5, GPIO.LOW)
+        GPIO.output(35, False)
         time.sleep(0.5)
-        GPIO.output(6, GPIO.LOW)
+        GPIO.output(37, False)
         time.sleep(0.5)
         print("Siren Status: OFF")
         toggle = False
@@ -161,7 +157,8 @@ while connection_status == True:
         # If over/equal to conditions below, "Dangerous" PM condition met (via OSHA 1910.1000)
         if IAQ_PM2 >= 55 or IAQ_PM10 >= 255 or IAQ_ovr >=255:
             client.publish("cu/pm_status", payload="Dangerous", qos=0)
-            GPIO.output(5, GPIO.HIGH)
+            time.sleep(0.5)
+            GPIO.output(37, True)
             time.sleep(0.5)
             client.publish("cu/vent", payload=True, qos=0)
             print("Ventilation Status: ON")
@@ -173,7 +170,8 @@ while connection_status == True:
         elif IAQ_PM2 >= 35 or IAQ_PM10 >= 155 or IAQ_ovr >=155:
             client.publish("cu/pm_status", payload="Unhealthy", qos=0)
             print("Siren Status: YELLOW")
-            GPIO.output(6, GPIO.HIGH)
+            time.sleep(0.5)
+            GPIO.output(35, True)
             time.sleep(5)
             new_data = False
             
@@ -199,6 +197,9 @@ while connection_status == True:
             client.publish("cu/sensor_id", payload="Sensor 3", qos=0)
             print("Data received from Sensor 3")           
             
+GPIO.cleanup()
+client.loop_stop()
+sys.exit() 
 GPIO.cleanup()
 client.loop_stop()
 sys.exit()
