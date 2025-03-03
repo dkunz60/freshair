@@ -24,7 +24,7 @@ GPIO.setup(5, GPIO.OUT)
 GPIO.setup(6, GPIO.OUT)
 
 # Raw data from sensors comes in the following format:
-# {"IAQI_PM2.5":12,"IAQI_PM10":2,"Overall_IAQI":12}
+# {"iaqi_pm2.5":12,"iaqi_pm10":2,"overall_iaqi":12}
 # NOTE: Numeric values between ":" and "," characters will change
 # depending on real time data
 
@@ -52,33 +52,37 @@ def on_subscribe(client, userdata, mid, granted_qos, properties=None):
 def on_message(client, userdata, msg):
     global data
     global received
+    global toggle
     global Sensor_1
     global Sensor_2
     global Sensor_3
     
-    try:
-        # THE FOLLOWING EXCERPT IS ADAPTED FROM AN AI GENERATED EXAMPLE:
-        payload = msg.payload.decode("utf-8")
-        
-        if isinstance(payload, str):
-            try:
-                data = json.loads(payload)
-                print("Received message: ", data)
-                received = True
-            except json.JSONDecodeError:
-                print("Failed to decode message")
+    if "Toggle" in msg.topic:
+        toggle = True
+    else:
+        try:
+            # THE FOLLOWING EXCERPT IS ADAPTED FROM AN AI GENERATED EXAMPLE:
+            payload = msg.payload.decode("utf-8")
+            
+            if isinstance(payload, str):
+                try:
+                    data = json.loads(payload)
+                    print("Received message: ", data)
+                    received = True
+                except json.JSONDecodeError:
+                    print("Failed to decode message")
+                    data = None
+                    received = True
+            else:
+                print("Invalid message type")
                 data = None
                 received = True
-        else:
-            print("Invalid message type")
+            
+        except Exception as e:
+            print("Message cannot be parsed in this data type")
             data = None
             received = True
-        
-    except Exception as e:
-        print("Message cannot be parsed in this data type")
-        data = None
-        received = True
-        # END OF AI GENERATED CODE
+            # END OF AI GENERATED CODE
                 
     if "Sensor1" in msg.topic:
         Sensor_1 = True
@@ -110,6 +114,7 @@ client.on_publish = on_publish
 client.subscribe("Sensor1/#", qos=0)
 client.subscribe("Sensor2/#", qos=0)
 client.subscribe("Sensor3/#", qos=0)
+client.subscribe("Toggle/#", qos=0)
 # Begin loop for broker
 client.loop_start()
 
@@ -121,17 +126,19 @@ while connection_status == True:
     time.sleep(1)
     # If acknowledged, turn off sirens
     
-    if toggle == True:
+    while toggle == True:
         GPIO.output(5, False)
         GPIO.output(6, False)
+        print("Sirens toggled")
+        toggle = False
             
     while received == True:
         # Parse sensor data
         if isinstance(data, dict):
             # If in the proper form, parse the IAQ values
-            IAQ_PM2 = data.get("IAQI_PM2.5", 0)
-            IAQ_PM10 = data.get("IAQI_PM10", 0)
-            IAQ_ovr = data.get("Overall_IAQI", 0)
+            IAQ_PM2 = data.get("iaqi_pm2.5", 0)
+            IAQ_PM10 = data.get("iaqi_10", 0)
+            IAQ_ovr = data.get("overall_iaqi", 0)
             new_data = True
             received = False
         elif data is None:
@@ -148,31 +155,37 @@ while connection_status == True:
         
     if new_data:
         time.sleep(0.5)
+        client.publish("cu/IAQ_PM2.5", payload=IAQ_PM2, qos=0)
+        client.publish("cu/IAQ_PM10", payload=IAQ_PM10, qos=0)
+        client.publish("cu/IAQ_ovr", payload=IAQ_ovr, qos=0)
         # If over/equal to conditions below, "Dangerous" PM condition met (via OSHA 1910.1000)
         if IAQ_PM2 >= 55 or IAQ_PM10 >= 255 or IAQ_ovr >=255:
-            print("Dangerous")
+            client.publish("cu/pm_status", payload="Dangerous", qos=0)
             GPIO.output(5, True)
             new_data = False
             user_input = False
         # If under "Dangerous" threshold and over/equal to conditions below, "Unhealthy" PM condition met (via OSHA 1910.1000)
         elif IAQ_PM2 >= 35 or IAQ_PM10 >= 155 or IAQ_ovr >=155:
-            print("Unhealthy")
+            client.publish("cu/pm_status", payload="Unhealthy", qos=0)
             GPIO.output(6, True)
             new_data = False
             user_input = False
         # If below both conditions, "Healthy" PM condition met (via OSHA 1910.1000)
         else:
-            print("Healthy")
+            client.publish("cu/pm_status", payload="Healthy", qos=0)
             toggle = True
             new_data = False
             user_input = False
             
         if Sensor_1 == True:
-            print("Sensor1")
+            client.publish("cu/sensor_id", payload="Sensor 1", qos=0)
         if Sensor_2 == True:
-            print("Sensor2")
+            client.publish("cu/sensor_id", payload="Sensor 2", qos=0)
         if Sensor_3 == True:
-            print("Sensor3")
+            client.publish("cu/sensor_id", payload="Sensor 3", qos=0)
+            
+client.loop_stop()
+sys.exit()
             
 client.loop_stop()
 sys.exit()
